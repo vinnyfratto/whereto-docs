@@ -1,0 +1,1745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wander App — Code Health Dashboard</title>
+
+  <!-- Wander fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Wander design tokens ──────────────────────────────────────────────── */
+    :root {
+      --cream:         #F0EBE0;
+      --card:          #FDFAF6;
+      --navy:          #1C3649;
+      --navy-light:    #2A4D65;
+      --rust:          #B85C38;
+      --wg-100:        #F0EBE2;
+      --wg-200:        #E4DDD3;
+      --wg-300:        #D4CCC2;
+      --wg-400:        #B8B0A6;
+      --wg-500:        #9E9690;
+      --wg-600:        #5C5449;
+      --wg-700:        #3A3530;
+      --success:       #4A7C59;
+      --warning:       #C4863A;
+      --error:         #B84040;
+      --info:          #3A6B8A;
+
+      --serif:         'DM Serif Display', Georgia, serif;
+      --mono:          'JetBrains Mono', 'Courier New', monospace;
+
+      --radius-sm:     6px;
+      --radius-md:     10px;
+      --radius-lg:     16px;
+      --radius-xl:     24px;
+
+      --shadow-sm:     0 2px 8px rgba(28,54,73,0.07);
+      --shadow-md:     0 8px 20px rgba(28,54,73,0.12);
+      --shadow-lg:     0 16px 40px rgba(28,54,73,0.16);
+    }
+
+    /* ── Reset & base ──────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--cream);
+      color: var(--navy);
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── Scrollbar ─────────────────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--wg-100); }
+    ::-webkit-scrollbar-thumb { background: var(--wg-300); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--wg-400); }
+
+    /* ── Header ────────────────────────────────────────────────────────────── */
+    .site-header {
+      background: var(--navy);
+      padding: 0 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-md);
+      min-height: 64px;
+      gap: 20px;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .header-brand .wordmark {
+      font-family: var(--serif);
+      font-size: 22px;
+      color: var(--cream);
+      letter-spacing: 0.01em;
+    }
+
+    .header-brand .wordmark em {
+      font-style: italic;
+      color: var(--rust);
+    }
+
+    .header-brand .badge {
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      color: var(--wg-500);
+      padding: 2px 8px;
+      border: 1px solid var(--navy-light);
+      border-radius: var(--radius-sm);
+    }
+
+    .header-meta {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex-shrink: 0;
+    }
+
+    .header-stat {
+      text-align: center;
+    }
+
+    .header-stat .val {
+      font-family: var(--serif);
+      font-size: 20px;
+      color: var(--rust);
+      display: block;
+    }
+
+    .header-stat .lbl {
+      font-size: 8px;
+      font-weight: 500;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--wg-500);
+    }
+
+    .header-divider {
+      width: 1px;
+      height: 32px;
+      background: var(--navy-light);
+    }
+
+    .btn-new-audit {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--cream);
+      background: var(--rust);
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .btn-new-audit:hover { background: #a04e2e; transform: translateY(-1px); }
+    .btn-new-audit:active { transform: translateY(0); }
+
+    /* ── Hero strip ────────────────────────────────────────────────────────── */
+    .hero-strip {
+      background: var(--card);
+      border-bottom: 1px solid var(--wg-200);
+      padding: 28px 40px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .hero-title {
+      font-family: var(--serif);
+      font-size: 30px;
+      color: var(--navy);
+      line-height: 1.2;
+    }
+
+    .hero-title em { font-style: italic; color: var(--rust); }
+
+    .hero-sub {
+      font-size: 11px;
+      color: var(--wg-500);
+      letter-spacing: 0.4px;
+      margin-top: 4px;
+    }
+
+    /* Health score ring */
+    .score-ring-wrap {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .score-ring {
+      position: relative;
+      width: 88px;
+      height: 88px;
+    }
+
+    .score-ring svg {
+      transform: rotate(-90deg);
+    }
+
+    .score-ring-label {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .score-ring-label .num {
+      font-family: var(--serif);
+      font-size: 26px;
+      color: var(--navy);
+      line-height: 1;
+    }
+
+    .score-ring-label .sub {
+      font-size: 8px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--wg-500);
+    }
+
+    .score-ring-info .title {
+      font-family: var(--serif);
+      font-size: 14px;
+      color: var(--navy);
+    }
+
+    .score-ring-info .detail {
+      font-size: 10px;
+      color: var(--wg-500);
+      margin-top: 2px;
+      letter-spacing: 0.3px;
+    }
+
+    /* ── Toolbar ───────────────────────────────────────────────────────────── */
+    .toolbar {
+      padding: 16px 40px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--wg-200);
+      background: var(--cream);
+      position: sticky;
+      top: 64px;
+      z-index: 90;
+    }
+
+    .toolbar-label {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      color: var(--wg-500);
+      margin-right: 4px;
+    }
+
+    .filter-btn {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: var(--radius-full, 999px);
+      border: 1.5px solid var(--wg-300);
+      background: transparent;
+      color: var(--wg-600);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .filter-btn:hover { border-color: var(--navy); color: var(--navy); }
+    .filter-btn.active { background: var(--navy); color: var(--cream); border-color: var(--navy); }
+    .filter-btn.active-rust { background: var(--rust); color: var(--cream); border-color: var(--rust); }
+    .filter-btn.active-success { background: var(--success); color: var(--cream); border-color: var(--success); }
+
+    .toolbar-spacer { flex: 1; }
+
+    .search-input {
+      font-family: var(--mono);
+      font-size: 11px;
+      background: var(--card);
+      border: 1.5px solid var(--wg-300);
+      border-radius: var(--radius-md);
+      padding: 6px 12px;
+      color: var(--navy);
+      width: 200px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .search-input::placeholder { color: var(--wg-400); }
+    .search-input:focus { border-color: var(--navy); }
+
+    /* ── Layout ────────────────────────────────────────────────────────────── */
+    .main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 40px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* ── Section headers ───────────────────────────────────────────────────── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0 6px;
+    }
+
+    .section-header .section-title {
+      font-family: var(--serif);
+      font-size: 18px;
+      color: var(--navy);
+    }
+
+    .section-header .section-count {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      color: var(--wg-500);
+      padding: 2px 8px;
+      background: var(--wg-100);
+      border-radius: 999px;
+    }
+
+    .section-line {
+      flex: 1;
+      height: 1px;
+      background: var(--wg-200);
+    }
+
+    /* ── Issue card ────────────────────────────────────────────────────────── */
+    .issue-card {
+      background: var(--card);
+      border-radius: var(--radius-lg);
+      border: 1.5px solid var(--wg-200);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      transition: box-shadow 0.2s, border-color 0.2s;
+    }
+
+    .issue-card:hover { box-shadow: var(--shadow-md); border-color: var(--wg-300); }
+
+    .issue-card.completed {
+      opacity: 0.62;
+      border-color: var(--success);
+      border-style: dashed;
+    }
+
+    .issue-card.completed .card-header { background: rgba(74,124,89,0.04); }
+
+    /* ── Card header ───────────────────────────────────────────────────────── */
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 20px;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s;
+    }
+
+    .card-header:hover { background: rgba(28,54,73,0.025); }
+
+    /* Score badge */
+    .score-badge {
+      flex-shrink: 0;
+      width: 52px;
+      height: 52px;
+      border-radius: var(--radius-md);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--serif);
+      font-size: 20px;
+      font-weight: 400;
+      color: white;
+      line-height: 1;
+      position: relative;
+    }
+
+    .score-badge .score-sub {
+      font-family: var(--mono);
+      font-size: 7px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      opacity: 0.85;
+      margin-top: 2px;
+    }
+
+    /* Score colors */
+    .score-0  { background: #4A7C59; }
+    .score-20 { background: #4A7C59; }
+    .score-25 { background: #6B8C4A; }
+    .score-30 { background: #7E9A40; }
+    .score-35 { background: #8FA534; }
+    .score-40 { background: #A5A826; }
+    .score-52 { background: #C4863A; }
+    .score-55 { background: #C47A34; }
+    .score-58 { background: #C46E34; }
+    .score-60 { background: #C46234; }
+    .score-65 { background: #C45630; }
+    .score-70 { background: #C04A2E; }
+    .score-75 { background: #B8452C; }
+    .score-78 { background: #B44028; }
+    .score-80 { background: #B03A24; }
+    .score-85 { background: #A83420; }
+    .score-90 { background: #A02E1C; }
+    .score-95 { background: #962818; }
+
+    .card-info { flex: 1; min-width: 0; }
+
+    .card-number {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--wg-500);
+      margin-bottom: 2px;
+    }
+
+    .card-title {
+      font-family: var(--serif);
+      font-size: 16px;
+      color: var(--navy);
+      line-height: 1.3;
+    }
+
+    .card-title .issue-number-inline {
+      color: var(--wg-500);
+      font-family: var(--mono);
+      font-size: 11px;
+      margin-right: 6px;
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 5px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      font-size: 8px;
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    .pill-blocker { background: rgba(184,64,64,0.12); color: #B84040; }
+    .pill-high    { background: rgba(196,134,58,0.12); color: #C4863A; }
+    .pill-medium  { background: rgba(58,107,138,0.12); color: #3A6B8A; }
+    .pill-low     { background: rgba(74,124,89,0.12);  color: #4A7C59; }
+
+    .pill-section {
+      font-size: 8px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--wg-100);
+      color: var(--wg-600);
+    }
+
+    .completed-stamp {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      color: var(--success);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .btn-complete {
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: var(--radius-md);
+      border: 1.5px solid var(--success);
+      background: transparent;
+      color: var(--success);
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn-complete:hover { background: var(--success); color: white; }
+
+    .btn-undo {
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: var(--radius-md);
+      border: 1.5px solid var(--wg-300);
+      background: transparent;
+      color: var(--wg-500);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-undo:hover { border-color: var(--error); color: var(--error); }
+
+    .chevron {
+      width: 20px;
+      height: 20px;
+      color: var(--wg-400);
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+
+    .chevron.open { transform: rotate(180deg); }
+
+    /* ── Card body (collapsible) ─────────────────────────────────────────────── */
+    .card-body {
+      display: none;
+      border-top: 1px solid var(--wg-200);
+      padding: 20px 24px 24px;
+      gap: 20px;
+      flex-direction: column;
+    }
+
+    .card-body.open { display: flex; }
+
+    /* Description */
+    .body-section-label {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      color: var(--rust);
+      margin-bottom: 6px;
+    }
+
+    .body-text {
+      font-size: 12px;
+      line-height: 1.7;
+      color: var(--wg-600);
+    }
+
+    /* Code block */
+    .code-block {
+      background: var(--navy);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .code-block pre {
+      font-family: var(--mono);
+      font-size: 11px;
+      line-height: 1.6;
+      color: var(--cream);
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .code-block .copy-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-family: var(--mono);
+      font-size: 8px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      background: rgba(240,235,224,0.1);
+      border: 1px solid rgba(240,235,224,0.2);
+      border-radius: var(--radius-sm);
+      color: var(--wg-400);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .code-block .copy-btn:hover { background: rgba(240,235,224,0.2); color: var(--cream); }
+    .code-block .copy-btn.copied { color: #6fcf97; border-color: rgba(111,207,151,0.4); }
+
+    /* Prompt label */
+    .code-block .prompt-label {
+      font-size: 8px;
+      font-weight: 500;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--rust);
+      opacity: 0.9;
+      margin-bottom: 8px;
+    }
+
+    /* Affected files */
+    .files-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .file-chip {
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 3px 10px;
+      background: var(--wg-100);
+      border: 1px solid var(--wg-200);
+      border-radius: var(--radius-sm);
+      color: var(--navy-light);
+    }
+
+    /* Notes / log */
+    .notes-area {
+      width: 100%;
+      font-family: var(--mono);
+      font-size: 11px;
+      line-height: 1.6;
+      background: var(--wg-100);
+      border: 1.5px solid var(--wg-200);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      color: var(--navy);
+      resize: vertical;
+      min-height: 64px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .notes-area:focus { border-color: var(--navy); }
+    .notes-area::placeholder { color: var(--wg-400); }
+
+    .btn-save-note {
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: var(--radius-md);
+      border: 1.5px solid var(--navy);
+      background: transparent;
+      color: var(--navy);
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-top: 6px;
+      align-self: flex-start;
+    }
+
+    .btn-save-note:hover { background: var(--navy); color: var(--cream); }
+
+    /* Activity log */
+    .activity-log {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .log-entry {
+      display: flex;
+      gap: 10px;
+      font-size: 10px;
+      color: var(--wg-500);
+      padding: 5px 10px;
+      background: var(--wg-100);
+      border-radius: var(--radius-sm);
+      border-left: 2px solid var(--wg-300);
+    }
+
+    .log-entry .log-ts { color: var(--wg-400); flex-shrink: 0; font-size: 9px; }
+    .log-entry .log-msg { color: var(--wg-600); }
+    .log-entry.log-complete { border-left-color: var(--success); }
+    .log-entry.log-note { border-left-color: var(--info); }
+    .log-entry.log-reopen { border-left-color: var(--warning); }
+
+    /* ── Audit sessions panel ──────────────────────────────────────────────── */
+    .sessions-panel {
+      background: var(--card);
+      border: 1.5px solid var(--wg-200);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-top: 40px;
+    }
+
+    .sessions-panel h2 {
+      font-family: var(--serif);
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+
+    .sessions-panel .sessions-sub {
+      font-size: 10px;
+      color: var(--wg-500);
+      letter-spacing: 0.3px;
+      margin-bottom: 16px;
+    }
+
+    .sessions-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .sessions-table th {
+      text-align: left;
+      font-size: 8px;
+      font-weight: 600;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--wg-500);
+      padding: 6px 12px;
+      border-bottom: 1px solid var(--wg-200);
+    }
+
+    .sessions-table td {
+      font-size: 11px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--wg-100);
+      color: var(--wg-600);
+      vertical-align: top;
+    }
+
+    .sessions-table tr:last-child td { border-bottom: none; }
+    .sessions-table tr:hover td { background: var(--wg-100); }
+
+    .session-score-pill {
+      font-family: var(--serif);
+      font-size: 13px;
+      font-weight: 400;
+      color: white;
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      display: inline-block;
+    }
+
+    /* ── New audit modal ───────────────────────────────────────────────────── */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(28,54,73,0.55);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-backdrop.open { display: flex; }
+
+    .modal {
+      background: var(--card);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+      padding: 32px;
+      width: 520px;
+      max-width: 95vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .modal h2 {
+      font-family: var(--serif);
+      font-size: 22px;
+      margin-bottom: 4px;
+    }
+
+    .modal .modal-sub {
+      font-size: 11px;
+      color: var(--wg-500);
+      margin-bottom: 20px;
+    }
+
+    .modal label {
+      display: block;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--wg-600);
+      margin-bottom: 5px;
+      margin-top: 14px;
+    }
+
+    .modal input, .modal textarea, .modal select {
+      width: 100%;
+      font-family: var(--mono);
+      font-size: 12px;
+      background: var(--wg-100);
+      border: 1.5px solid var(--wg-300);
+      border-radius: var(--radius-md);
+      padding: 8px 12px;
+      color: var(--navy);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .modal input:focus, .modal textarea:focus, .modal select:focus { border-color: var(--navy); }
+
+    .modal textarea { min-height: 80px; resize: vertical; }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .btn-cancel {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 8px 18px;
+      border: 1.5px solid var(--wg-300);
+      border-radius: var(--radius-md);
+      background: transparent;
+      color: var(--wg-600);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-cancel:hover { border-color: var(--navy); color: var(--navy); }
+
+    .btn-confirm {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 8px 18px;
+      border: none;
+      border-radius: var(--radius-md);
+      background: var(--rust);
+      color: white;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-confirm:hover { background: #a04e2e; }
+
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      font-size: 20px;
+      color: var(--wg-400);
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px 8px;
+    }
+
+    .modal-close:hover { color: var(--navy); }
+
+    /* ── Summary stats row ─────────────────────────────────────────────────── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .stat-tile {
+      background: var(--card);
+      border: 1.5px solid var(--wg-200);
+      border-radius: var(--radius-lg);
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .stat-tile .tile-val {
+      font-family: var(--serif);
+      font-size: 28px;
+      line-height: 1;
+      color: var(--navy);
+    }
+
+    .stat-tile .tile-val.rust { color: var(--rust); }
+    .stat-tile .tile-val.success { color: var(--success); }
+    .stat-tile .tile-val.warning { color: var(--warning); }
+    .stat-tile .tile-val.error { color: var(--error); }
+
+    .stat-tile .tile-lbl {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--wg-500);
+    }
+
+    /* ── Empty state ───────────────────────────────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 48px;
+      color: var(--wg-400);
+      font-size: 12px;
+    }
+
+    .empty-state .empty-icon { font-size: 32px; margin-bottom: 10px; }
+    .empty-state .empty-title { font-family: var(--serif); font-size: 18px; color: var(--wg-500); margin-bottom: 4px; }
+
+    /* ── Footer ────────────────────────────────────────────────────────────── */
+    .site-footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 9px;
+      letter-spacing: 1px;
+      color: var(--wg-400);
+      border-top: 1px solid var(--wg-200);
+      margin-top: 40px;
+      text-transform: uppercase;
+    }
+
+    /* ── Responsive ────────────────────────────────────────────────────────── */
+    @media (max-width: 720px) {
+      .site-header, .hero-strip, .toolbar, .main { padding-left: 16px; padding-right: 16px; }
+      .hero-strip { flex-direction: column; align-items: flex-start; }
+      .header-meta { display: none; }
+      .search-input { width: 100%; }
+    }
+
+    /* ── Animations ────────────────────────────────────────────────────────── */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .issue-card { animation: fadeIn 0.25s ease both; }
+  </style>
+</head>
+
+<body>
+
+<!-- ── Header ──────────────────────────────────────────────────────────────── -->
+<header class="site-header">
+  <div class="header-brand">
+    <span class="wordmark">Wander <em>Health</em></span>
+    <span class="badge">Internal</span>
+  </div>
+  <div class="header-meta">
+    <div class="header-stat">
+      <span class="val" id="hdr-open">—</span>
+      <span class="lbl">Open</span>
+    </div>
+    <div class="header-divider"></div>
+    <div class="header-stat">
+      <span class="val" id="hdr-done">—</span>
+      <span class="lbl">Resolved</span>
+    </div>
+    <div class="header-divider"></div>
+    <div class="header-stat">
+      <span class="val" id="hdr-score">—</span>
+      <span class="lbl">Health</span>
+    </div>
+    <div class="header-divider"></div>
+    <button class="btn-new-audit" onclick="openNewAuditModal()">+ New Audit</button>
+  </div>
+</header>
+
+<!-- ── Hero ────────────────────────────────────────────────────────────────── -->
+<div class="hero-strip">
+  <div>
+    <div class="hero-title">Code <em>Health</em> Dashboard</div>
+    <div class="hero-sub" id="hero-audit-date">Loading audit…</div>
+  </div>
+  <div class="score-ring-wrap">
+    <div class="score-ring">
+      <svg width="88" height="88" viewBox="0 0 88 88">
+        <circle cx="44" cy="44" r="36" fill="none" stroke="#E4DDD3" stroke-width="7"/>
+        <circle cx="44" cy="44" r="36" fill="none" stroke="#C4863A" stroke-width="7"
+          stroke-linecap="round"
+          id="ring-progress"
+          stroke-dasharray="226"
+          stroke-dashoffset="88"
+          style="transition: stroke-dashoffset 1s ease, stroke 0.5s ease"/>
+      </svg>
+      <div class="score-ring-label">
+        <span class="num" id="ring-num">61</span>
+        <span class="sub">/ 100</span>
+      </div>
+    </div>
+    <div class="score-ring-info">
+      <div class="title" id="ring-label">🟠 Moderate Risk</div>
+      <div class="detail" id="ring-detail">4 blockers · 6 pre-launch</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toolbar ─────────────────────────────────────────────────────────────── -->
+<div class="toolbar">
+  <span class="toolbar-label">Filter</span>
+  <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+  <button class="filter-btn" onclick="setFilter('blocker',this)">🔴 Blocker</button>
+  <button class="filter-btn" onclick="setFilter('high',this)">🟠 High</button>
+  <button class="filter-btn" onclick="setFilter('medium',this)">🟡 Medium</button>
+  <button class="filter-btn" onclick="setFilter('low',this)">🟢 Low</button>
+  <button class="filter-btn" onclick="setFilter('open',this)">Open</button>
+  <button class="filter-btn" onclick="setFilter('done',this)">✓ Resolved</button>
+  <div class="toolbar-spacer"></div>
+  <input class="search-input" type="text" placeholder="Search issues…" oninput="onSearch(this.value)" />
+</div>
+
+<!-- ── Main ────────────────────────────────────────────────────────────────── -->
+<main class="main">
+
+  <!-- Stats row -->
+  <div class="stats-row">
+    <div class="stat-tile">
+      <span class="tile-val rust" id="stat-blockers">4</span>
+      <span class="tile-lbl">Launch Blockers</span>
+    </div>
+    <div class="stat-tile">
+      <span class="tile-val warning" id="stat-high">6</span>
+      <span class="tile-lbl">Fix Before Launch</span>
+    </div>
+    <div class="stat-tile">
+      <span class="tile-val" style="color:var(--info)" id="stat-medium">3</span>
+      <span class="tile-lbl">Nice to Have</span>
+    </div>
+    <div class="stat-tile">
+      <span class="tile-val success" id="stat-resolved">0</span>
+      <span class="tile-lbl">Resolved</span>
+    </div>
+    <div class="stat-tile">
+      <span class="tile-val" id="stat-pct" style="color:var(--navy)">0%</span>
+      <span class="tile-lbl">Completion</span>
+    </div>
+  </div>
+
+  <!-- Issues injected by JS -->
+  <div id="issues-container"></div>
+
+  <!-- Audit history -->
+  <div class="sessions-panel" id="sessions-panel">
+    <h2>Audit <em style="font-style:italic;color:var(--rust)">History</em></h2>
+    <div class="sessions-sub">Each audit snapshot is stored in your browser. Use "+ New Audit" to log a new review session.</div>
+    <table class="sessions-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Version</th>
+          <th>Score</th>
+          <th>Open</th>
+          <th>Resolved</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody id="sessions-tbody">
+        <tr><td colspan="6" style="text-align:center;color:var(--wg-400);padding:20px;">No prior audit sessions yet.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  Wander App · Code Health Dashboard · Data stored locally in browser · Not for public distribution
+</footer>
+
+<!-- ── New Audit Modal ──────────────────────────────────────────────────────── -->
+<div class="modal-backdrop" id="auditModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeNewAuditModal()">×</button>
+    <h2>Log New <em style="font-style:italic;color:var(--rust)">Audit</em></h2>
+    <div class="modal-sub">Snapshot the current state of this dashboard into the audit history log.</div>
+    <label>App Version</label>
+    <input type="text" id="audit-version" placeholder="e.g. 0.0.14" />
+    <label>Auditor / Reviewer</label>
+    <input type="text" id="audit-reviewer" placeholder="Your name or initials" />
+    <label>Notes for this session</label>
+    <textarea id="audit-notes" placeholder="What changed since the last audit? Any new features, bugs fixed, refactors?"></textarea>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeNewAuditModal()">Cancel</button>
+      <button class="btn-confirm" onclick="saveAuditSession()">Save Snapshot</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════════════
+// DATA — all issues from the June 2026 audit
+// ════════════════════════════════════════════════════════════════════════════
+const ISSUES = [
+  // ── SECTION 1: SECURITY ──────────────────────────────────────────────────
+  {
+    id: '1.1',
+    section: 'Security',
+    title: 'API Keys Embedded in App Bundle',
+    score: 95,
+    priority: 'blocker',
+    description: 'Three external service keys (Anthropic AI, Duffel flights, RapidAPI) are bundled inside the app itself. A determined person who downloads the app can extract these keys and run up charges on your accounts — or make fake bookings through Duffel.',
+    files: ['src/utils/api.ts', 'src/utils/booking.ts', 'src/providers/flights/PricelineProvider.ts'],
+    prompt: `Move all three external API calls (Anthropic curation, Duffel order creation,
+and Priceline flight search) behind Supabase Edge Functions. The app should
+never hold these keys — it should call /functions/v1/curate,
+/functions/v1/create-order, and /functions/v1/search-flights instead.
+Remove EXPO_PUBLIC_ANTHROPIC_API_KEY, EXPO_PUBLIC_DUFFEL_API_KEY, and
+EXPO_PUBLIC_RAPIDAPI_KEY from app.json and all src/ files.`,
+  },
+  {
+    id: '1.2',
+    section: 'Security',
+    title: '.env File May Be in Git History',
+    score: 85,
+    priority: 'blocker',
+    description: 'The .env file containing all private passwords and keys may have been committed to the git history at some point. Even if excluded today, someone with access to the full commit history can read it. All keys would need to be rotated after cleanup.',
+    files: ['.env', '.gitignore'],
+    prompt: `Check if .env has ever been committed to git history using:
+  git log --all --full-history -- .env
+If it appears, use the BFG Repo Cleaner tool to scrub it from all historical
+commits. Then rotate every key in the .env file (Anthropic, Duffel,
+RapidAPI, Supabase anon key). Confirm .env is in .gitignore.`,
+  },
+  {
+    id: '1.3',
+    section: 'Security',
+    title: 'Password Requirements Too Weak',
+    score: 55,
+    priority: 'high',
+    description: 'Users can currently create an account with only an 8-character password. Modern security standards require at least 12 characters. This is a minor but real vulnerability for account security.',
+    files: ['app/profile.tsx'],
+    prompt: `In app/profile.tsx, update validatePassword() to require:
+- Minimum 12 characters (currently 8)
+- At least one uppercase letter
+- At least one number
+Update the error messages shown to users accordingly.`,
+  },
+
+  // ── SECTION 2: CODE QUALITY ──────────────────────────────────────────────
+  {
+    id: '2.1',
+    section: 'Code Quality',
+    title: 'Debug Logging Left in Production Code',
+    score: 80,
+    priority: 'blocker',
+    description: 'There are 99 debug log statements scattered throughout the app. In production these expose internal data (booking details, search results, API responses) to anyone with a device plugged into a computer, and waste processing power.',
+    files: ['src/store/appStore.ts', 'src/utils/booking.ts', 'src/utils/api.ts', 'src/store/authStore.ts'],
+    prompt: `Create a logger utility at src/utils/logger.ts that gates all output behind
+__DEV__. Then do a global find-and-replace: replace all console.log() and
+console.warn() calls across the entire codebase with logger.debug() /
+logger.warn(). The logger should be a no-op in production builds.`,
+  },
+  {
+    id: '2.2',
+    section: 'Code Quality',
+    title: 'Stripe Payment Integration Is Incomplete',
+    score: 78,
+    priority: 'blocker',
+    description: 'The Wander Together group booking feature has placeholder comments where real payment processing (Stripe) should be. Users cannot complete a real group payment — the code says "TODO: add Stripe here" in multiple files. This blocks the Together feature from launching.',
+    files: ['app/together/booking/passenger-form.tsx', 'src/store/togetherBookingStore.ts'],
+    prompt: `Complete the Stripe payment integration in the Wander Together booking flow.
+In togetherBookingStore.ts, replace the TODO [STRIPE GO-LIVE] blocks with
+a real Stripe PaymentIntent creation call using @stripe/stripe-react-native.
+In passenger-form.tsx, mount the Stripe PaymentSheet component.
+Use test mode keys for now; document the go-live key swap needed.`,
+  },
+  {
+    id: '2.3',
+    section: 'Code Quality',
+    title: 'Type Safety Holes ("any" overuse)',
+    score: 65,
+    priority: 'high',
+    description: 'In 30+ places the safety system built into the programming language (TypeScript) has been bypassed using a wildcard called "any". This disables automatic error checking — bugs that should be caught before shipping can slip through undetected.',
+    files: ['src/store/appStore.ts', 'src/providers/flights/DuffelProvider.ts', 'app/search/results.tsx'],
+    prompt: `Audit and eliminate all \`any\` type annotations in: src/store/appStore.ts
+(flight mapping section), src/providers/flights/DuffelProvider.ts, and
+app/search/results.tsx. Replace with proper interfaces. Create a
+DuffelItinerary interface and DuffelOrder interface matching the actual
+Duffel API response shapes. Run tsc --noEmit to confirm zero type errors.`,
+  },
+  {
+    id: '2.4',
+    section: 'Code Quality',
+    title: 'No Error Monitoring in Production',
+    score: 70,
+    priority: 'high',
+    description: 'When something breaks in the app for a real user, there is no system to automatically alert you or record what went wrong. You would only find out if a user reports it. A service like Sentry can silently capture crashes so you can fix them proactively.',
+    files: ['app/_layout.tsx', 'src/store/appStore.ts'],
+    prompt: `Integrate Sentry for production error tracking. Install @sentry/react-native,
+initialize it in app/_layout.tsx with the Sentry DSN, and wrap the root
+Navigator. Replace the catch(err) => throw err patterns in appStore.ts with
+Sentry.captureException(err). Add breadcrumbs for the search and booking flows.`,
+  },
+
+  // ── SECTION 3: STABILITY ─────────────────────────────────────────────────
+  {
+    id: '3.1',
+    section: 'Stability',
+    title: 'Race Condition on App Startup',
+    score: 60,
+    priority: 'high',
+    description: 'When the app launches, it simultaneously loads saved favorites AND saved destinations from storage. Because these two loads happen at the exact same moment, one can overwrite the other — a user could occasionally open the app and see their saved items partially missing. This is intermittent and hard to reproduce consistently.',
+    files: ['src/store/appStore.ts'],
+    prompt: `In src/store/appStore.ts, fix the hydrateFavorites function to combine both
+AsyncStorage reads into a single set() call. Currently there are two
+separate set() calls that can race. Load both storedFavs and storedDests
+with Promise.all, then call set() once with both values merged.`,
+  },
+  {
+    id: '3.2',
+    section: 'Stability',
+    title: 'No Retry Logic for Failed API Calls',
+    score: 58,
+    priority: 'high',
+    description: 'When the flight search or booking API returns an error (bad internet, server hiccup, rate limiting), the app currently just fails. It does not try again. A simple retry with a short wait would make the app feel significantly more reliable on spotty connections.',
+    files: ['src/utils/booking.ts', 'src/utils/api.ts'],
+    prompt: `Create a withRetry(fn, maxAttempts=3, baseDelayMs=500) utility in
+src/utils/retryFetch.ts that retries with exponential backoff on network
+errors and 429/503 HTTP responses. Apply it to the Duffel order creation
+call in src/utils/booking.ts and the flight search call in src/utils/api.ts.
+Parse Retry-After headers if present.`,
+  },
+  {
+    id: '3.3',
+    section: 'Stability',
+    title: 'Search Results Array Has No Size Limit',
+    score: 40,
+    priority: 'medium',
+    description: 'As users search for flights, results accumulate in memory with no upper limit. Over a long session with many searches, this could slow down or crash the app on older devices. A simple cap prevents this.',
+    files: ['src/store/appStore.ts'],
+    prompt: `In src/store/appStore.ts, add a MAX_DESTINATIONS = 200 constant. When
+appending new results to the destinations array in the progressive update
+strategy, slice the array to MAX_DESTINATIONS before setting state.
+Also apply this cap when hydrating from AsyncStorage.`,
+  },
+
+  // ── SECTION 4: ARCHITECTURE ──────────────────────────────────────────────
+  {
+    id: '4.1',
+    section: 'Architecture',
+    title: 'Passenger Form Date Validation Incomplete',
+    score: 52,
+    priority: 'high',
+    description: 'The passport entry form checks that dates are in the right format but not if they make logical sense. It would currently accept a date of birth set to next year, or a passport that expired 3 years ago. Duffel would reject the booking, wasting the user\'s time.',
+    files: ['app/search/PassengerFormModal.tsx'],
+    prompt: `In app/search/PassengerFormModal.tsx, enhance date validation:
+1. born_on: must be in the past, and person must be at least 2 years old
+   (infant), 12 years old (child), or 18+ (adult) matching the passenger type.
+2. document_expiry: must be at least 6 months in the future (most airlines
+   require this). Show a clear error message for each failure case.`,
+  },
+  {
+    id: '4.2',
+    section: 'Architecture',
+    title: 'Magic Numbers Scattered Across Files',
+    score: 35,
+    priority: 'low',
+    description: 'Numbers like card widths and animation durations are hardcoded in multiple places. When you want to change a layout value you have to find and update it in 5 different files. This is a maintainability concern, not a bug.',
+    files: ['app/search/results.tsx', 'app/search/destination-explore.tsx', 'src/store/appStore.ts'],
+    prompt: `Create src/constants/layout.ts. Move the repeated magic numbers from across
+the codebase into named exports: SCREEN_W, VIBE_CARD_W, VIBE_F_W,
+CARD_BORDER_RADIUS, BOTTOM_TAB_HEIGHT, etc. Update all import sites.
+Run the app to verify no visual regressions.`,
+  },
+  {
+    id: '4.3',
+    section: 'Architecture',
+    title: 'Font Used Directly Instead of via Design System',
+    score: 30,
+    priority: 'low',
+    description: 'In one screen, a font is referenced by its full name directly in code instead of through the shared design system (WanderSkin.ts). This means a future font change would miss this screen — a visual consistency risk.',
+    files: ['app/search/index.tsx'],
+    prompt: `In app/search/index.tsx, find any direct fontFamily: 'DM Serif Display'
+references and replace them with the appropriate WanderSkin typography token.
+Ensure no screen in app/ uses raw font family strings — all must come from
+WanderSkin.typography.`,
+  },
+
+  // ── SECTION 5: TESTING & DOCS ─────────────────────────────────────────────
+  {
+    id: '5.1',
+    section: 'Testing',
+    title: 'Zero Automated Tests',
+    score: 55,
+    priority: 'high',
+    description: 'There are no automated tests in the codebase. Every time a change is made, someone has to manually click through every feature to confirm nothing broke. As the app grows this becomes increasingly risky and time-consuming.',
+    files: ['src/store/appStore.ts', 'src/utils/booking.ts', 'src/utils/flightCache.ts'],
+    prompt: `Set up Vitest + @testing-library/react-native. Write unit tests for the
+three highest-risk utilities: src/utils/flightCache.ts (cache hit/miss/expiry),
+src/utils/booking.ts (order creation, error handling), and
+src/store/appStore.ts (search param updates, hydration).
+Aim for 80% coverage on these three files as a starting point.`,
+  },
+  {
+    id: '5.2',
+    section: 'Documentation',
+    title: 'No Architecture Documentation',
+    score: 25,
+    priority: 'low',
+    description: 'A new developer (or future you) joining the project would have difficulty understanding how the pieces fit together. There is no overview document explaining the big picture of how search, booking, and Together sync all connect.',
+    files: ['ARCHITECTURE.md'],
+    prompt: `Create a ARCHITECTURE.md at the project root documenting: (1) the search
+pipeline from user input → Claude curation → Duffel results, (2) the
+Wander Together real-time sync flow, (3) how to swap flight providers
+(src/providers/flights/index.ts), (4) the Supabase schema summary with
+RLS notes. Keep it under 300 lines.`,
+  },
+];
+
+// ════════════════════════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════════════════════════
+const STORAGE_KEY  = 'wander_health_v1';
+const SESSION_KEY  = 'wander_sessions_v1';
+
+function loadState() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { return {}; }
+}
+
+function saveState(state) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function loadSessions() {
+  try { return JSON.parse(localStorage.getItem(SESSION_KEY) || '[]'); } catch { return []; }
+}
+
+function saveSessions(sessions) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify(sessions));
+}
+
+let state    = loadState();    // { [id]: { completed, completedAt, notes, log } }
+let sessions = loadSessions(); // [{ date, version, reviewer, notes, score, open, resolved }]
+let filter   = 'all';
+let query    = '';
+
+// ════════════════════════════════════════════════════════════════════════════
+// SCORING HELPERS
+// ════════════════════════════════════════════════════════════════════════════
+function scoreColor(s) {
+  if (s <= 20) return '#4A7C59';
+  if (s <= 35) return '#7E9A40';
+  if (s <= 50) return '#A5A826';
+  if (s <= 65) return '#C4863A';
+  if (s <= 80) return '#B84040';
+  return '#962818';
+}
+
+function scoreLabel(s) {
+  if (s <= 20) return '🟢 Healthy';
+  if (s <= 50) return '🟡 Monitor';
+  if (s <= 75) return '🟠 Action needed';
+  return '🔴 Critical';
+}
+
+function priorityPill(p) {
+  const map = {
+    blocker: '<span class="pill pill-blocker">🔴 Launch Blocker</span>',
+    high:    '<span class="pill pill-high">🟠 Fix Before Launch</span>',
+    medium:  '<span class="pill pill-medium">🟡 Nice to Have</span>',
+    low:     '<span class="pill pill-low">🟢 Low Priority</span>',
+  };
+  return map[p] || '';
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════════════════════════════════════════
+function getIssueState(id) {
+  return state[id] || { completed: false, completedAt: null, notes: '', log: [] };
+}
+
+function fmtTs(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+}
+
+function renderCard(issue) {
+  const s         = getIssueState(issue.id);
+  const completed = s.completed;
+  const color     = scoreColor(issue.score);
+  const scoreClass = 'score-' + issue.score;
+
+  const completedHtml = completed
+    ? `<span class="completed-stamp">✓ Resolved ${fmtTs(s.completedAt)}</span>`
+    : '';
+
+  const actionBtn = completed
+    ? `<button class="btn-undo" onclick="toggleComplete('${issue.id}', event)">Reopen</button>`
+    : `<button class="btn-complete" onclick="toggleComplete('${issue.id}', event)">Mark Resolved</button>`;
+
+  const logHtml = (s.log || []).slice().reverse().map(e =>
+    `<div class="log-entry log-${e.type}">
+       <span class="log-ts">${fmtTs(e.ts)}</span>
+       <span class="log-msg">${e.msg}</span>
+     </div>`
+  ).join('');
+
+  const filesHtml = (issue.files || []).map(f =>
+    `<span class="file-chip">${f}</span>`
+  ).join('');
+
+  return `
+<div class="issue-card ${completed ? 'completed' : ''}" id="card-${issue.id}"
+     data-priority="${issue.priority}"
+     data-section="${issue.section.toLowerCase()}"
+     data-completed="${completed}">
+  <div class="card-header" onclick="toggleCard('${issue.id}')">
+    <div class="score-badge ${scoreClass}" style="background:${color}">
+      ${issue.score}
+      <span class="score-sub">/100</span>
+    </div>
+    <div class="card-info">
+      <div class="card-number">${issue.section} · ${issue.id}</div>
+      <div class="card-title">${issue.title}</div>
+      <div class="card-meta">
+        ${priorityPill(issue.priority)}
+        <span class="pill-section">${issue.section}</span>
+        ${completedHtml}
+      </div>
+    </div>
+    <div class="card-actions">
+      ${actionBtn}
+      <svg class="chevron" id="chev-${issue.id}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9l-7 7-7-7"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="card-body" id="body-${issue.id}">
+
+    <div>
+      <div class="body-section-label">What's the problem?</div>
+      <div class="body-text">${issue.description}</div>
+    </div>
+
+    ${filesHtml ? `
+    <div>
+      <div class="body-section-label">Affected Files</div>
+      <div class="files-list">${filesHtml}</div>
+    </div>` : ''}
+
+    <div>
+      <div class="code-block">
+        <div class="prompt-label">↳ Prompt to fix — copy & paste into Claude</div>
+        <button class="copy-btn" onclick="copyPrompt('${issue.id}', event)">Copy</button>
+        <pre id="prompt-${issue.id}">${issue.prompt}</pre>
+      </div>
+    </div>
+
+    <div>
+      <div class="body-section-label">Notes</div>
+      <textarea class="notes-area" id="notes-${issue.id}"
+        placeholder="Add context, links, or progress notes…"
+        onchange="autoSaveNotes('${issue.id}')">${s.notes || ''}</textarea>
+      <button class="btn-save-note" onclick="saveNotes('${issue.id}')">Save Note</button>
+    </div>
+
+    ${logHtml ? `
+    <div>
+      <div class="body-section-label">Activity Log</div>
+      <div class="activity-log">${logHtml}</div>
+    </div>` : ''}
+
+  </div>
+</div>`;
+}
+
+function renderSections() {
+  const sections = [...new Set(ISSUES.map(i => i.section))];
+  let html = '';
+
+  const filtered = ISSUES.filter(issue => {
+    const s = getIssueState(issue.id);
+    if (filter === 'blocker' && issue.priority !== 'blocker') return false;
+    if (filter === 'high'    && !['blocker','high'].includes(issue.priority)) return false;
+    if (filter === 'medium'  && issue.priority !== 'medium') return false;
+    if (filter === 'low'     && issue.priority !== 'low') return false;
+    if (filter === 'open'    && s.completed) return false;
+    if (filter === 'done'    && !s.completed) return false;
+    if (query) {
+      const q = query.toLowerCase();
+      if (!issue.title.toLowerCase().includes(q) &&
+          !issue.description.toLowerCase().includes(q) &&
+          !issue.section.toLowerCase().includes(q) &&
+          !issue.id.includes(q)) return false;
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    return `<div class="empty-state">
+      <div class="empty-icon">✈️</div>
+      <div class="empty-title">No issues match this filter</div>
+      <div>Try switching to "All" or clearing your search.</div>
+    </div>`;
+  }
+
+  sections.forEach(sec => {
+    const sectionIssues = filtered.filter(i => i.section === sec);
+    if (!sectionIssues.length) return;
+    html += `
+      <div class="section-header">
+        <span class="section-title">${sec}</span>
+        <span class="section-count">${sectionIssues.length}</span>
+        <div class="section-line"></div>
+      </div>
+      ${sectionIssues.map(renderCard).join('\n')}
+    `;
+  });
+
+  return html;
+}
+
+function render() {
+  document.getElementById('issues-container').innerHTML = renderSections();
+  updateStats();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// STATS
+// ════════════════════════════════════════════════════════════════════════════
+function updateStats() {
+  const total    = ISSUES.length;
+  const resolved = ISSUES.filter(i => getIssueState(i.id).completed).length;
+  const open     = total - resolved;
+  const pct      = Math.round((resolved / total) * 100);
+
+  // Weighted health score: start at 0, add (100 - issue.score) * weight for resolved
+  // Overall score = average of remaining open issue scores
+  const openScores = ISSUES.filter(i => !getIssueState(i.id).completed).map(i => i.score);
+  const healthScore = openScores.length
+    ? Math.round(openScores.reduce((a,b) => a+b, 0) / openScores.length)
+    : 0;
+
+  document.getElementById('hdr-open').textContent    = open;
+  document.getElementById('hdr-done').textContent    = resolved;
+  document.getElementById('hdr-score').textContent   = healthScore;
+  document.getElementById('ring-num').textContent    = healthScore;
+  document.getElementById('stat-resolved').textContent = resolved;
+  document.getElementById('stat-pct').textContent    = pct + '%';
+
+  // Ring
+  const circ   = 226;
+  const offset = circ - (circ * (1 - healthScore / 100));
+  const ring   = document.getElementById('ring-progress');
+  ring.setAttribute('stroke-dashoffset', circ - offset);
+  ring.setAttribute('stroke', scoreColor(healthScore));
+
+  document.getElementById('ring-label').textContent  = scoreLabel(healthScore);
+  document.getElementById('ring-detail').textContent =
+    `${ISSUES.filter(i=>i.priority==='blocker' && !getIssueState(i.id).completed).length} blockers · ${resolved} resolved`;
+
+  // Blockers / high counts
+  document.getElementById('stat-blockers').textContent =
+    ISSUES.filter(i=>i.priority==='blocker' && !getIssueState(i.id).completed).length;
+  document.getElementById('stat-high').textContent =
+    ISSUES.filter(i=>i.priority==='high' && !getIssueState(i.id).completed).length;
+  document.getElementById('stat-medium').textContent =
+    ISSUES.filter(i=>['medium','low'].includes(i.priority) && !getIssueState(i.id).completed).length;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// ACTIONS
+// ════════════════════════════════════════════════════════════════════════════
+function toggleCard(id) {
+  const body = document.getElementById('body-' + id);
+  const chev = document.getElementById('chev-' + id);
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  chev.classList.toggle('open', !isOpen);
+}
+
+function toggleComplete(id, e) {
+  e.stopPropagation();
+  const s    = getIssueState(id);
+  const now  = new Date().toISOString();
+  const done = !s.completed;
+
+  if (!state[id]) state[id] = { completed: false, completedAt: null, notes: '', log: [] };
+  state[id].completed   = done;
+  state[id].completedAt = done ? now : null;
+  if (!state[id].log) state[id].log = [];
+  state[id].log.push({
+    type: done ? 'complete' : 'reopen',
+    ts: now,
+    msg: done ? 'Marked as resolved.' : 'Reopened.',
+  });
+  saveState(state);
+  render();
+}
+
+function saveNotes(id) {
+  const ta  = document.getElementById('notes-' + id);
+  const val = ta ? ta.value : '';
+  if (!state[id]) state[id] = { completed: false, completedAt: null, notes: '', log: [] };
+  const prev = state[id].notes;
+  state[id].notes = val;
+  if (val !== prev) {
+    if (!state[id].log) state[id].log = [];
+    state[id].log.push({ type: 'note', ts: new Date().toISOString(), msg: 'Note updated.' });
+  }
+  saveState(state);
+  render();
+}
+
+function autoSaveNotes(id) {
+  // Debounce: save on blur/change only
+  const ta = document.getElementById('notes-' + id);
+  if (!state[id]) state[id] = { completed: false, completedAt: null, notes: '', log: [] };
+  state[id].notes = ta ? ta.value : '';
+  saveState(state);
+}
+
+function copyPrompt(id, e) {
+  e.stopPropagation();
+  const pre  = document.getElementById('prompt-' + id);
+  const btn  = e.target;
+  navigator.clipboard.writeText(pre.textContent).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function setFilter(f, btn) {
+  filter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function onSearch(q) {
+  query = q.trim();
+  render();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// AUDIT SESSIONS
+// ════════════════════════════════════════════════════════════════════════════
+function openNewAuditModal() {
+  document.getElementById('auditModal').classList.add('open');
+}
+
+function closeNewAuditModal() {
+  document.getElementById('auditModal').classList.remove('open');
+}
+
+function saveAuditSession() {
+  const version  = document.getElementById('audit-version').value.trim() || '—';
+  const reviewer = document.getElementById('audit-reviewer').value.trim() || '—';
+  const notes    = document.getElementById('audit-notes').value.trim() || '';
+
+  const total    = ISSUES.length;
+  const resolved = ISSUES.filter(i => getIssueState(i.id).completed).length;
+  const openScores = ISSUES.filter(i => !getIssueState(i.id).completed).map(i => i.score);
+  const score    = openScores.length
+    ? Math.round(openScores.reduce((a,b)=>a+b,0) / openScores.length)
+    : 0;
+
+  sessions.unshift({
+    date:     new Date().toISOString(),
+    version,
+    reviewer,
+    notes,
+    score,
+    open:     total - resolved,
+    resolved,
+  });
+  saveSessions(sessions);
+  renderSessions();
+  closeNewAuditModal();
+
+  // Clear form
+  document.getElementById('audit-version').value  = '';
+  document.getElementById('audit-reviewer').value = '';
+  document.getElementById('audit-notes').value    = '';
+}
+
+function renderSessions() {
+  const tbody = document.getElementById('sessions-tbody');
+  if (!sessions.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--wg-400);padding:20px;">No prior audit sessions yet.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = sessions.map(s => {
+    const bg = scoreColor(s.score);
+    return `<tr>
+      <td>${fmtTs(s.date)}</td>
+      <td>${s.version}</td>
+      <td><span class="session-score-pill" style="background:${bg}">${s.score}</span></td>
+      <td>${s.open}</td>
+      <td>${s.resolved}</td>
+      <td style="max-width:280px;color:var(--wg-500)">${s.notes || '<span style="color:var(--wg-300)">—</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// HERO DATE
+// ════════════════════════════════════════════════════════════════════════════
+function setHeroDate() {
+  const d = new Date();
+  document.getElementById('hero-audit-date').textContent =
+    'Initial audit: June 1, 2026 · Last viewed: ' +
+    d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// BOOT
+// ════════════════════════════════════════════════════════════════════════════
+setHeroDate();
+render();
+renderSessions();
+
+// Close modal on backdrop click
+document.getElementById('auditModal').addEventListener('click', function(e) {
+  if (e.target === this) closeNewAuditModal();
+});
+</script>
+</body>
+</html>

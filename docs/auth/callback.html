@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Signing you in...</title></head>
+<body>
+<p style="font-family:sans-serif;text-align:center;margin-top:40px">Redirecting back to WhereTo...</p>
+<script>
+  // Forward all query params + hash to the app's custom scheme.
+  // Supabase appends ?code=...&code_verifier=... (PKCE) or #access_token=... (implicit).
+  var appUrl = 'whereto://auth/callback' + window.location.search + window.location.hash;
+  window.location.replace(appUrl);
+</script>
+</body>
+</html>
