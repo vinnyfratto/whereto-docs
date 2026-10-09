@@ -1,0 +1,50 @@
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+<div class="Header__navbar" id="navBar">
+    <div class="Header__container" id="navBarContainer">
+        <div class="Header__logo">
+            <a href="https://wheretotrips.com/" aria-label="WhereTo home">
+                <img class="wt-logo" src="https://wheretotrips.com/assets/whereto-logo-azure.svg" alt="WhereTo" width="171" height="34" />
+            </a>
+        </div>
+        <div class="Header__name">Help Center</div>
+        <div class="Header__menuTab">
+            <ul class="Header__menuList">
+                <li class="Header__tabsTab" id="portal_tabHome">
+                    ${Home}
+                </li>
+                <li class="Header__tabsTab" id="portal_tabCases">
+                    ${MyRequests}
+                </li>
+                <li class="Header__tabsTab" id="portal_tabSolutions">
+                    ${KnowledgeBase}
+                </li>
+                <li class="Header__tabsTab" id="portal_tabCommunity">
+                    ${Community}
+                </li>
+                <li class="Header__tabsTab wt-siteTab">
+                    <a class="Header__tabs__link" href="https://wheretotrips.com/">WhereToTrips.com</a>
+                </li>
+                ${SignInSignOut}
+                ${UserPreference}
+            </ul>
+        </div>
+        ${Search}
+        <div class="Header__menuicon">
+            <span class="Header__menuBoxMain" id="menuIconContainer">
+                <span class="Header__menu" id="menuBox"></span>
+            </span>
+        </div>
+        <div class="Header__clBoth"></div>
+    </div>
+</div>
+<div id="headerContent" class='Header__searchSection'>
+    <div class='Header__container'>
+        <p class="wt-eyebrow">WhereTo Help Center</p>
+        <h2 class='Header__searchTitle'>${WelcomeText}</h2>
+        <p class='Header__description'>${WelcomeDescription}</p>
+        ${SearchHome}
+    </div>
+</div>
